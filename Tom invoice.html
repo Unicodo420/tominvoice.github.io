@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ລະບົບຈັດການຮ້ານຄ້າ ພັດທະນາໂດຍຕ້ອມ 76192728</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { background-color: #f4f6f9; font-family: 'Noto Sans Lao', sans-serif; font-size: 0.9rem; }
+        .nav-card { background: #ffffff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 10px; }
+        .invoice-box { background: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); max-width: 900px; margin: auto; }
+        .img-thumb-table { width: 36px; height: 36px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6; }
+        .badge-group { font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; }
+        .video-container { display: none; position: relative; max-width: 350px; margin: 10px auto; }
+        .summary-card { background: #f8f9fa; border-radius: 6px; padding: 12px; border: 1px solid #e9ecef; }
+        .form-section-title { font-size: 0.85rem; font-weight: 700; color: #0d6efd; border-bottom: 1px solid #dee2e6; padding-bottom: 4px; margin-bottom: 8px; text-transform: uppercase; }
+        
+        /* ปรับขนาด QR Code ให้ใหญ่ขึ้น และชัดเจนสำหรับการสแกน */
+        .qr-preview {
+            max-width: 180px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1/1;
+            object-fit: contain;
+            padding: 6px;
+            background: #ffffff;
+            border: 2px solid #dee2e6 !important;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .invoice-box { padding: 12px !important; }
+            .summary-card h4 { font-size: 1.25rem !important; }
+            .qr-preview { max-width: 150px; } /* ปรับขนาดบนมือถือให้ใหญ่ขึ้นเพื่อสแกนง่าย */
+        }
+
+        @media print {
+            @page { size: portrait; margin: 8mm; }
+            body { background: #fff !important; padding: 0 !important; font-size: 11px !important; }
+            .no-print, .btn, input[type="file"] { display: none !important; }
+            .invoice-box { border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; margin: 0 !important; }
+            .container-fluid { width: 100% !important; padding: 0 !important; }
+            input, select, textarea { border: none !important; background: transparent !important; padding: 0 !important; font-weight: bold !important; appearance: none !important; box-shadow: none !important; }
+            .card, .summary-card, .border { border: 1px solid #ddd !important; box-shadow: none !important; }
+            .table-dark { background-color: #343a40 !important; color: #fff !important; -webkit-print-color-adjust: exact; }
+            .bg-light-subtle, .bg-light { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+            .row { --bs-gutter-x: 1rem; }
+            .qr-preview { max-width: 140px !important; }
+        }
+    </style>
+</head>
+<body class="p-2 p-md-3">
+
+<div class="container-fluid max-width-1200 mx-auto" style="max-width: 1100px;">
+    
+    <!-- 1. Header Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white nav-card mb-3 no-print">
+        <div class="container-fluid p-0">
+            <span class="navbar-brand fw-bold text-primary fs-6">🛒 ພັດທະນາໂດຍ ຕ້ອມ76192728</span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <div class="navbar-nav d-flex flex-wrap gap-2 mt-2 mt-lg-0 w-100" id="nav-btn-group">
+                    <button class="btn btn-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="invoice" onclick="showPage('invoice')">📄 1. ອອກເອກະສານ / POS</button>
+                    <button class="btn btn-outline-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="stock" onclick="showPage('stock')">📦 2. ຈັດການຄັງສິນຄ້າ</button>
+                    <button class="btn btn-outline-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="history" onclick="showPage('history')">📂 3. ປະຫວັດໃບບິນ</button>
+                    <button class="btn btn-outline-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="reports" onclick="showPage('reports')">📊 4. ລາຍງານ</button>
+                    <button class="btn btn-outline-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="customer" onclick="showPage('customer')">👥 5. ຂໍ້ມູນລູກຄ້າ</button>
+                    <button class="btn btn-outline-primary btn-sm px-3 fw-bold nav-menu-btn" data-page="category" onclick="showPage('category')">🏷️ 6. ຈັດການໝວດໝູ່</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ================= 1. POS System ================= -->
+    <div id="page-invoice">
+        <div class="no-print card p-2 mb-3 border-0 shadow-sm">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <label class="fw-bold text-secondary text-nowrap">ປະເພດເອກະສານ:</label>
+                    <select id="doc-type" class="form-select form-select-sm fw-bold text-primary border-primary" style="width: auto;">
+                        <option value="ໃບຮັບເງິນ">ໃບຮັບເງິນ (Receipt)</option>
+                        <option value="ໃບແຈ້ງໜີ້">ໃບແຈ້ງໜີ້ (Invoice)</option>
+                        <option value="ໃບສົ່ງເຄື່ອງ">ໃບສົ່ງເຄື່ອງ (Delivery Slip)</option>
+                    </select>
+                </div>
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-success btn-sm fw-bold" onclick="saveInvoiceAndPrint()">🖨️ ບັນທຶກ & ພິມເອກະສານ</button>
+                    <button class="btn btn-primary btn-sm fw-bold" onclick="downloadImage()">🖼️ ດາວໂຫຼດເປັນຮູບ</button>
+                    <button class="btn btn-success btn-sm fw-bold" style="background-color: #25D366; border-color: #25D366;" onclick="shareWhatsApp()">💬 ສົ່ງເຂົ້າ WhatsApp</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="capture-area" class="invoice-box">
+            <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
+                <h3 class="fw-bold m-0 text-primary" id="doc-title">ໃບຮັບເງິນ</h3>
+                <div class="text-end">
+                    <span class="badge bg-primary fs-6" id="doc-status-badge">ອອນໄລນ໌</span>
+                </div>
+            </div>
+
+            <!-- Layout Grid Responsive ปรับเป็น 12 คอลัมน์บนมือถือ -->
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-7">
+                    <div class="border rounded p-2 bg-light-subtle h-100">
+                        <div class="form-section-title">🏢 ຂໍ້ມູນຮ້ານຄ້າ (ຜູ້ຂາຍ)</div>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-7">
+                                <input type="text" class="form-control form-control-sm mb-1 fw-bold border-0 p-0" placeholder="ຊື່ຮ້ານຄ້າ" value="ຮ້ານຕ້ອມ ຂາຍເຄື່ອງສົ່ງ">
+                                <input type="text" class="form-control form-control-sm mb-1 border-0 p-0" placeholder="ເບີໂທລະສັບ" value="020-76192728">
+                                <textarea class="form-control form-control-sm mb-1 border-0 p-0" rows="1" placeholder="ທີ່ຢູ່ຮ້ານຄ້າ" style="resize: none;">ບ້ານໜອງພະຍາ ເມືອງສີໂຄດຕະບອງ ນະຄອນຫຼວງວຽງຈັນ</textarea>
+                                
+                                <div class="border-top pt-1 mt-1">
+                                    <small class="fw-bold text-primary d-block mb-1">💳 ການຊຳລະເງິນ:</small>
+                                    <input type="text" class="form-control form-control-sm mb-1 border-0 p-0" placeholder="ທະນາຄານ" value="BCEL One">
+                                    <input type="text" class="form-control form-control-sm mb-1 border-0 p-0 fw-bold" placeholder="ເລກບັນຊີ" value="160120001647268001">
+                                    <input type="text" class="form-control form-control-sm border-0 p-0" placeholder="ຊື່ບັນຊີ" value="ຕ້ອມຂາຍເຄື່ອງສົ່ງ ">
+                                </div>
+                            </div>
+                            
+                            <div class="col-5 text-center border-start ps-2 d-flex flex-column align-items-center justify-content-center">
+                                <label class="fw-bold d-block text-secondary mb-1" style="font-size: 0.75rem;">QR Code ຊຳລະເງິນ</label>
+                                <img id="qr-preview-img" 
+                                     src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 24 24' fill='none' stroke='%23ccc' stroke-width='1.5'><rect x='3' y='3' width='7' height='7'/><rect x='14' y='3' width='7' height='7'/><rect x='3' y='14' width='7' height='7'/><path d='M14 14h3v3h-3z'/><path d='M18 18h3v3h-3z'/></svg>" 
+                                     class="qr-preview border rounded bg-white mb-1">
+                                <input type="file" id="qr-upload" class="form-control form-control-sm no-print mt-1" accept="image/*" onchange="uploadShopQR(this)" style="font-size: 0.65rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-5">
+                    <div class="border rounded p-2 bg-light-subtle h-100">
+                        <div class="form-section-title">👤 ຂໍ້ມູນລູກຄ້າ</div>
+                        
+                        <div class="no-print mb-1">
+                            <input type="text" id="cust-search-input" class="form-control form-control-sm mb-1" placeholder="🔍 ຄົ້ນຫາລູກຄ້າ..." oninput="filterCustomerDropdown()">
+                            <select id="cust-select" class="form-select form-select-sm" onchange="autoFillCustomer(this)">
+                                <option value="">-- ເລືອກລູກຄ້າ --</option>
+                            </select>
+                        </div>
+
+                        <div class="input-group input-group-sm mb-1">
+                            <span class="input-group-text fw-bold p-1 bg-transparent border-0">ເລກທີ:</span>
+                            <input type="text" id="doc-no" class="form-control form-control-sm fw-bold text-primary border-0" readonly>
+                            <button class="btn btn-sm btn-outline-secondary no-print py-0 px-2" type="button" onclick="generateNextDocNo()" title="ສ້າງເລກທີໃໝ່">🔄</button>
+                        </div>
+                        <div class="input-group input-group-sm mb-1">
+                            <span class="input-group-text fw-bold p-1 bg-transparent border-0">ວັນທີ:</span>
+                            <input type="date" id="doc-date" class="form-control form-control-sm border-0">
+                        </div>
+                        <input type="text" id="cust-name-input" class="form-control form-control-sm mb-1 border-0 p-0 fw-bold" placeholder="ຊື່ລູກຄ້າ">
+                        <input type="text" id="cust-phone-input" class="form-control form-control-sm mb-1 border-0 p-0" placeholder="ເບີໂທລູກຄ້າ">
+                        <textarea id="cust-address-input" class="form-control form-control-sm border-0 p-0" rows="2" placeholder="ທີ່ຢູ່ລູກຄ້າ" style="resize: none;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POS Search Bar -->
+            <div class="no-print border rounded p-2 bg-light mb-2">
+                <div class="row g-2 align-items-center">
+                    <div class="col-12 col-sm-4">
+                        <input type="text" id="product-search-input" class="form-control form-control-sm" placeholder="🔍 ຄົ້ນຫາສິນຄ້າ..." oninput="filterStockDropdown()">
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <select id="stock-select" class="form-select form-select-sm" onchange="addFromStock(this)">
+                            <option value="">-- ເລືອກສິນຄ້າຈາກຄັງ --</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-sm-2">
+                        <button class="btn btn-sm btn-outline-dark w-100 fw-bold" onclick="togglePosCamera()">📷 ສະແກນ</button>
+                    </div>
+                    <div class="col-6 col-sm-2">
+                        <button class="btn btn-sm btn-primary w-100 fw-bold" onclick="addCartRow()">+ ເພີ່ມແຖວ</button>
+                    </div>
+                </div>
+
+                <div id="pos-video-container" class="video-container">
+                    <div id="pos-reader" style="width: 100%;"></div>
+                    <div class="text-center mt-2">
+                        <button class="btn btn-sm btn-secondary" onclick="stopPosCamera()">ປິດ</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cart Table -->
+            <div class="table-responsive mb-2">
+                <table class="table table-sm table-bordered align-middle m-0">
+                    <thead class="table-dark text-center" style="font-size: 0.85rem;">
+                        <tr>
+                            <th style="width: 5%;">ລຳດັບ</th>
+                            <th style="width: 8%;">ຮູບ</th>
+                            <th style="width: 17%;">ບາໂຄ້ດ</th>
+                            <th>ຊື່ສິນຄ້າ</th>
+                            <th style="width: 10%;">ຈຳນວນ</th>
+                            <th style="width: 15%;">ລາຄາ/ໜ່ວຍ</th>
+                            <th style="width: 15%;">ລາຄາລວມ</th>
+                            <th class="no-print" style="width: 5%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cart-table" style="font-size: 0.85rem;"></tbody>
+                </table>
+            </div>
+
+            <div class="row pt-1 align-items-center g-2">
+                <div class="col-12 col-md-5">
+                    <div class="summary-card">
+                        <label class="form-label fw-bold text-secondary mb-1" style="font-size: 0.8rem;">💳 ສະຖານະການຊຳລະເງິນ:</label>
+                        <select class="form-select form-select-sm fw-bold text-success border-0" id="pay-status">
+                            <option value="ຈ່າຍແລ້ວ" class="text-success">✅ ຈ່າຍແລ້ວ (Paid)</option>
+                            <option value="ຍັງບໍ່ທັນຊຳລະ" class="text-danger">❌ ຍັງບໍ່ທັນຊຳລະ (Unpaid)</option>
+                            <option value="ເຄດິດ 7 ວັນ" class="text-warning">⏳ ເຄດິດ 7 ວັນ</option>
+                            <option value="ເຄດິດ 1 ເດືອນ" class="text-warning">⏳ ເຄດິດ 1 ເດືອນ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-12 col-md-7 text-end">
+                    <div class="summary-card">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="text-secondary" style="font-size: 0.85rem;">ຍອດລວມຍ່ອຍ (Subtotal):</span>
+                            <div><span id="sub-total" class="fw-bold">0</span> <small>ກີບ</small></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="discount-input" class="text-danger fw-bold" style="font-size: 0.85rem;">ສ່ວນຫຼຸດ (Discount):</label>
+                            <div class="input-group input-group-sm w-auto">
+                                <input type="number" id="discount-input" class="form-control form-control-sm text-end fw-bold text-danger border-0 p-0" value="0" min="0" style="max-width: 90px;" oninput="calculateTotal()">
+                                <span class="input-group-text bg-transparent border-0 p-0 ms-1">ກີບ</span>
+                            </div>
+                        </div>
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 fw-bold">ຍອດຊຳລະສຸດທິ:</h6>
+                            <h4 class="m-0 text-primary fw-bold"><span id="grand-total">0</span> <small class="fs-6">ກີບ</small></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 2. Stock Management ================= -->
+    <div id="page-stock" class="invoice-box d-none">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="fw-bold m-0 text-primary">📦 ຈັດການຄັງສິນຄ້າ (Inventory)</h4>
+            <div class="no-print">
+                <button class="btn btn-sm btn-outline-success me-1 fw-bold" onclick="exportExcel('stock')">📥 Export Excel</button>
+                <label class="btn btn-sm btn-outline-primary mb-0 fw-bold">
+                    📤 Import Excel <input type="file" hidden accept=".xlsx, .xls" onchange="importExcel(event, 'stock')">
+                </label>
+            </div>
+        </div>
+        
+        <div class="card p-2 mb-3 bg-light border-0 shadow-sm">
+            <h6 class="fw-bold text-secondary mb-2" id="form-stock-title">➕ ເພີ່ມ / ແກ້ໄຂ ສິນຄ້າ</h6>
+            <input type="hidden" id="stock-index">
+            <input type="hidden" id="stock-img-base64">
+            
+            <div class="row g-2 align-items-center mb-2">
+                <div class="col-md-2">
+                    <input type="text" id="stock-barcode" class="form-control form-control-sm" placeholder="ບາໂຄ້ດ">
+                </div>
+                <div class="col-md-2">
+                    <select id="stock-category" class="form-select form-select-sm"></select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="stock-name" class="form-control form-control-sm" placeholder="ຊື່ສິນຄ້າ">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" id="stock-cost" class="form-control form-control-sm" placeholder="ຕົ້ນທຶນ (Cost)" oninput="calcProfitMargin()">
+                </div>
+                <div class="col-md-2">
+                    <input type="number" id="stock-price" class="form-control form-control-sm" placeholder="ລາຄາຂາຍ (Price)" oninput="calcProfitMargin()">
+                </div>
+                <div class="col-md-1">
+                    <span id="margin-label" class="badge bg-info text-dark w-100 p-2">0%</span>
+                </div>
+            </div>
+
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4">
+                    <input type="file" id="stock-img-file" class="form-control form-control-sm" accept="image/*" onchange="processAndResizeImage(this)">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-sm btn-outline-dark me-1" onclick="toggleCamera()">📷 ສະແກນບາໂຄ້ດ</button>
+                </div>
+                <div class="col-md-4 text-end">
+                    <button class="btn btn-sm btn-success px-4 fw-bold" onclick="saveStock()">ບັນທຶກສິນຄ້າ</button>
+                </div>
+            </div>
+
+            <div id="video-container" class="video-container">
+                <div id="stock-reader" style="width: 100%;"></div>
+                <div class="text-center mt-2">
+                    <button class="btn btn-sm btn-secondary" onclick="stopCamera()">ປິດ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="fw-bold m-0">ລາຍການສິນຄ້າທັງໝົດ</h6>
+            <select id="filter-category" class="form-select form-select-sm w-auto" onchange="renderStock()"></select>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle border">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center">ຮູບ</th>
+                        <th>ໝວດໝູ່</th>
+                        <th>ບາໂຄ້ດ</th>
+                        <th>ຊື່ສິນຄ້າ</th>
+                        <th>ຕົ້ນທຶນ</th>
+                        <th>ລາຄາຂາຍ</th>
+                        <th>ກຳໄລ (%)</th>
+                        <th class="text-center">ຈັດການ</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= 3. History System ================= -->
+    <div id="page-history" class="invoice-box d-none">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="fw-bold m-0 text-primary">📂 ປະຫວັດໃບບິນ ແລະ ເອກະສານ</h4>
+            <button class="btn btn-sm btn-outline-success fw-bold" onclick="exportExcel('history')">📥 Export Excel</button>
+        </div>
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <input type="text" id="search-history" class="form-control form-control-sm" placeholder="ຄົ້ນຫາ: ເລກທີ, ຊື່ລູກຄ້າ, ວັນທີ..." oninput="renderHistory()">
+            </div>
+            <div class="col-md-3">
+                <select id="filter-history-status" class="form-select form-select-sm" onchange="renderHistory()">
+                    <option value="">-- ທຸກສະຖານະ --</option>
+                    <option value="ຈ່າຍແລ້ວ">ຈ່າຍແລ້ວ</option>
+                    <option value="ຍັງບໍ່ທັນຊຳລະ">ຍັງບໍ່ທັນຊຳລະ</option>
+                    <option value="ເຄດິດ 7 ວັນ">ເຄດິດ 7 ວັນ</option>
+                    <option value="ເຄດິດ 1 ເດືອນ">ເຄດິດ 1 ເດືອນ</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle border">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ວັນທີ</th>
+                        <th>ເລກທີ</th>
+                        <th>ປະເພດ</th>
+                        <th>ລູກຄ້າ</th>
+                        <th>ມູນຄ່າລວມ</th>
+                        <th>ສະຖານະ</th>
+                        <th class="text-center">ຈັດການ</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="historyDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary" id="modal-doc-title">ລາຍລະອຽດທຸລະກຳ</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modal-doc-body"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary btn-sm fw-bold" onclick="loadInvoiceToPrint()">📄 ດຶງຂໍ້ມູນໄປໜ້າ POS</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">ປິດ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 4. Reports System ================= -->
+    <div id="page-reports" class="invoice-box d-none">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="fw-bold m-0 text-primary">📊 ລະບົບລາຍງານ (Reports)</h4>
+            <button class="btn btn-success btn-sm fw-bold" onclick="exportReportExcel()">📥 ດາວໂຫຼດ Excel</button>
+        </div>
+        
+        <div class="card p-2 mb-3 bg-light border-0 shadow-sm">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-1">📅 ແຕ່ວັນທີ:</label>
+                    <input type="date" id="report-start-date" class="form-control form-control-sm" onchange="generateReports()">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold small mb-1">📅 ຫາວັນທີ:</label>
+                    <input type="date" id="report-end-date" class="form-control form-control-sm" onchange="generateReports()">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold small mb-1">🏷️ ໝວດໝູ່ສິນຄ້າ:</label>
+                    <select id="report-category" class="form-select form-select-sm" onchange="generateReports()">
+                        <option value="ທັງໝົດ">-- ທຸກໝວດໝູ່ (All Categories) --</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button class="btn btn-primary btn-sm w-100 fw-bold mt-3" onclick="resetReportFilter()">🔄 ລ້າງ Filter</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <div class="card bg-primary text-white p-3 border-0 shadow-sm">
+                    <h6 class="m-0">💰 ຍອດຂາຍລວມ (Total Sales)</h6>
+                    <h3 class="fw-bold mt-2 mb-0" id="report-total-sales">0 ກີບ</h3>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card bg-success text-white p-3 border-0 shadow-sm">
+                    <h6 class="m-0">🧾 ຈຳນວນໃບບິນ/ທຸລະກຳ (Total Orders)</h6>
+                    <h3 class="fw-bold mt-2 mb-0" id="report-total-orders">0 ບິນ</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card p-2 border-0 shadow-sm border-top border-4 border-warning">
+                    <h6 class="fw-bold border-bottom pb-2 text-secondary">🔥 ສິນຄ້າຂາຍດີ</h6>
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>ລຳດັບ</th><th>ຊື່ສິນຄ້າ</th><th class="text-end">ຈຳນວນ</th></tr></thead>
+                        <tbody id="report-top-selling"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-2 border-0 shadow-sm border-top border-4 border-success">
+                    <h6 class="fw-bold border-bottom pb-2 text-secondary">💎 ສິນຄ້າກຳໄລສູງສຸດ</h6>
+                    <table class="table table-sm align-middle">
+                        <thead><tr><th>ລຳດັບ</th><th>ຊື່ສິນຄ້າ</th><th class="text-end">ກຳໄລ (ກີບ)</th></tr></thead>
+                        <tbody id="report-top-profitable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 5. Customer Management ================= -->
+    <div id="page-customer" class="invoice-box d-none">
+        <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+            <h4 class="fw-bold m-0 text-primary">👥 ຈັດການຂໍ້ມູນລູກຄ້າ</h4>
+            <div>
+                <button class="btn btn-sm btn-outline-success me-1 fw-bold" onclick="exportExcel('customer')">📥 Export Excel</button>
+                <label class="btn btn-sm btn-outline-primary mb-0 fw-bold">
+                    📤 Import Excel <input type="file" hidden accept=".xlsx, .xls" onchange="importExcel(event, 'customer')">
+                </label>
+            </div>
+        </div>
+        
+        <div class="card p-2 mb-3 bg-light border-0 shadow-sm">
+            <h6 class="fw-bold text-secondary mb-2" id="form-cust-title">➕ ເພີ່ມ / ແກ້ໄຂ ລູກຄ້າ</h6>
+            <input type="hidden" id="cust-index">
+            <div class="row g-2 mb-2">
+                <div class="col-md-3">
+                    <select id="cust-group" class="form-select form-select-sm">
+                        <option value="ຮ້ານຄ້າສົ່ງ">🏪 ຮ້ານຄ້າສົ່ງ</option>
+                        <option value="ຮ້ານຄ້າຍ່ອຍ">🛒 ຮ້ານຄ້າຍ່ອຍ</option>
+                        <option value="ສ່ວນບຸກຄົນ" selected>👤 ສ່ວນບຸກຄົນ</option>
+                        <option value="ບໍລິສັດ">🏢 ບໍລິສັດ</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="cust-name" class="form-control form-control-sm" placeholder="ຊື່ລູກຄ້າ">
+                </div>
+                <div class="col-md-3">
+                    <input type="text" id="cust-phone" class="form-control form-control-sm" placeholder="ເບີໂທ">
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-sm btn-success w-100 fw-bold" onclick="saveCustomer()">ບັນທຶກລູກຄ້າ</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <input type="text" id="cust-address" class="form-control form-control-sm" placeholder="ທີ່ຢູ່">
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-striped table-hover align-middle border">
+                <thead class="table-dark">
+                    <tr><th>ກຸ່ມ</th><th>ຊື່ລູກຄ້າ</th><th>ເບີໂທ</th><th>ທີ່ຢູ່</th><th class="text-center">ຈັດການ</th></tr>
+                </thead>
+                <tbody id="cust-table"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ================= 6. Category Management ================= -->
+    <div id="page-category" class="invoice-box d-none">
+        <div class="border-bottom pb-2 mb-3">
+            <h4 class="fw-bold m-0 text-primary">🏷️ ຈັດການໝວດໝູ່ສິນຄ້າ</h4>
+        </div>
+        
+        <div class="card p-2 mb-3 bg-light border-0 shadow-sm" style="max-width: 500px;">
+            <h6 class="fw-bold text-secondary mb-2" id="form-cat-title">➕ ເພີ່ມໝວດໝູ່ໃໝ່</h6>
+            <input type="hidden" id="cat-index">
+            <div class="row g-2">
+                <div class="col-md-8">
+                    <input type="text" id="cat-name" class="form-control form-control-sm" placeholder="ຊື່ໝວດໝູ່">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-sm btn-success w-100 fw-bold" onclick="saveCategory()">ບັນທຶກ</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive" style="max-width: 500px;">
+            <table class="table table-sm table-striped table-hover align-middle border">
+                <thead class="table-dark">
+                    <tr><th>ລຳດັບ</th><th>ຊື່ໝວດໝູ່</th><th class="text-center">ຈັດການ</th></tr>
+                </thead>
+                <tbody id="cat-table"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('doc-date').valueAsDate = new Date();
+    const noImgPlaceholder = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="%23ccc" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+
+    let stockData = [];
+    let customerData = [];
+    let categoryData = [];
+    let historyData = [];
+    let html5QrCodePOS = null;
+    let html5QrCodeStock = null;
+    let selectedHistoryIndex = null;
+    let currentStockPage = 1;
+    const itemsPerPage = 30;
+
+    const defaultCategories = ['📦 ທົ່ວໄປ', '🥤 ເຄື່ອງດື່ມ', '🍿 ຂະໜົມ/ອາຫານ', '🧴 ເຄື່ອງໃຊ້ປະຈຳວັນ', '🔌 ເອເລັກໂຕຣນິກ'];
+
+    try {
+        stockData = JSON.parse(localStorage.getItem('my_stock')) || [];
+        customerData = JSON.parse(localStorage.getItem('my_customers')) || [];
+        categoryData = JSON.parse(localStorage.getItem('my_categories')) || defaultCategories;
+        historyData = JSON.parse(localStorage.getItem('my_history')) || [];
+        
+        const savedQr = localStorage.getItem('shop_qr_code');
+        if (savedQr) {
+            document.getElementById('qr-preview-img').src = savedQr;
+        }
+    } catch(e) {
+        stockData = []; customerData = []; categoryData = defaultCategories; historyData = [];
+    }
+
+    function playBeepSound() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = 1000;
+            gain.gain.value = 0.1;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.15);
+        } catch (e) {
+            console.log("Audio play error", e);
+        }
+    }
+
+    document.getElementById('doc-type').addEventListener('change', function() {
+        document.getElementById('doc-title').innerText = this.value;
+    });
+
+    function uploadShopQR(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imgBase64 = e.target.result;
+            document.getElementById('qr-preview-img').src = imgBase64;
+            localStorage.setItem('shop_qr_code', imgBase64);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function showPage(page) {
+        ['invoice', 'stock', 'history', 'reports', 'customer', 'category'].forEach(p => {
+            const pageEl = document.getElementById(`page-${p}`);
+            if (pageEl) {
+                pageEl.classList.toggle('d-none', p !== page);
+            }
+        });
+
+        document.querySelectorAll('.nav-menu-btn').forEach(btn => {
+            if (btn.getAttribute('data-page') === page) {
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-primary');
+            } else {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            }
+        });
+
+        const navbarCollapse = document.getElementById('mainNavbar');
+        if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+            const bsCollapse = bootstrap.Collapse.getInstance(navbarCollapse);
+            if (bsCollapse) bsCollapse.hide();
+        }
+
+        if (page !== 'stock') stopCamera();
+        if (page !== 'invoice') stopPosCamera();
+        if (page === 'reports') generateReports();
+        if (page === 'history') renderHistory();
+    }
+
+    // แก้ไขระบบกรอง URL / Base64 สำหรับรูปภาพสินค้า
+    function addCartRow(barcode = '', name = '', price = 0, img = '', cost = 0) {
+        const tbody = document.getElementById('cart-table');
+        const rowCount = tbody.rows.length + 1;
+        const tr = document.createElement('tr');
+        
+        let imgSrc = noImgPlaceholder;
+        if (img && typeof img === 'string') {
+            if (img.startsWith('data:image') || img.startsWith('http')) {
+                imgSrc = img.trim();
+            } else if (img.includes('src=')) {
+                const match = img.match(/src=["']([^"']+)["']/);
+                imgSrc = match ? match[1] : noImgPlaceholder;
+            }
+        }
+
+        tr.innerHTML = `
+            <td class="text-center row-index fw-bold">${rowCount}</td>
+            <td class="text-center"><img src="${imgSrc}" class="img-thumb-table" alt="product"></td>
+            <td><input type="text" class="form-control form-control-sm border-0 item-barcode p-0" value="${barcode}"></td>
+            <td><input type="text" class="form-control form-control-sm border-0 item-name p-0" value="${name}"></td>
+            <td><input type="number" class="form-control form-control-sm item-qty text-center border-0 p-0" value="1" min="1" onchange="calculateTotal()"></td>
+            <td><input type="number" class="form-control form-control-sm item-price text-end border-0 p-0" value="${price}" min="0" onchange="calculateTotal()"></td>
+            <td class="text-end fw-bold item-total">0</td>
+            <td class="no-print text-center">
+                <input type="hidden" class="item-cost" value="${cost}">
+                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-0 px-1" onclick="removeRow(this)">✕</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+        calculateTotal();
+    }
+
+    function removeRow(btn) {
+        const row = btn.closest('tr');
+        if (row) {
+            row.remove();
+            updateRowNumbers();
+            calculateTotal();
+        }
+    }
+
+    function updateRowNumbers() {
+        const rows = document.querySelectorAll('#cart-table tr');
+        rows.forEach((row, index) => {
+            const indexTd = row.querySelector('.row-index');
+            if (indexTd) {
+                indexTd.textContent = index + 1;
+            }
+        });
+    }
+
+    function calculateTotal() {
+        let subtotal = 0;
+        document.querySelectorAll('#cart-table tr').forEach(row => {
+            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+            const price = parseFloat(row.querySelector('.item-price').value) || 0;
+            const total = qty * price;
+            row.querySelector('.item-total').innerText = total.toLocaleString();
+            subtotal += total;
+        });
+
+        const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+        let grandTotal = subtotal - discount;
+        if (grandTotal < 0) grandTotal = 0;
+
+        document.getElementById('sub-total').innerText = subtotal.toLocaleString();
+        document.getElementById('grand-total').innerText = grandTotal.toLocaleString();
+    }
+
+    async function togglePosCamera() {
+        const container = document.getElementById('pos-video-container');
+        if (html5QrCodePOS) {
+            stopPosCamera();
+            return;
+        }
+        container.style.display = 'block';
+        html5QrCodePOS = new Html5Qrcode("pos-reader");
+        
+        try {
+            await html5QrCodePOS.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    playBeepSound();
+                    const matchedItem = stockData.find(item => item.barcode === decodedText);
+                    if (matchedItem) {
+                        addCartRow(matchedItem.barcode, matchedItem.name, matchedItem.price, matchedItem.img, matchedItem.cost);
+                    } else {
+                        addCartRow(decodedText, 'ສິນຄ້າບາໂຄ້ດ ' + decodedText, 0, '', 0);
+                    }
+                    stopPosCamera();
+                },
+                (errorMessage) => {}
+            );
+        } catch (err) {
+            alert('ບໍ່ສາມາດເປີດກ້ອງໄດ້: ' + err);
+            container.style.display = 'none';
+            html5QrCodePOS = null;
+        }
+    }
+
+    function stopPosCamera() {
+        if (html5QrCodePOS) {
+            html5QrCodePOS.stop().then(() => {
+                html5QrCodePOS = null;
+                document.getElementById('pos-video-container').style.display = 'none';
+            }).catch(() => {
+                html5QrCodePOS = null;
+                document.getElementById('pos-video-container').style.display = 'none';
+            });
+        } else {
+            document.getElementById('pos-video-container').style.display = 'none';
+        }
+    }
+
+    // แก้ไขเพื่อสร้าง Auto Increment Document Number หลังสั่งบันทึกเอกสาร
+    function saveInvoiceAndPrint() {
+        const docNo = document.getElementById('doc-no').value;
+        const docType = document.getElementById('doc-type').value;
+        const docDate = document.getElementById('doc-date').value;
+        const custName = document.getElementById('cust-name-input').value || 'ລູກຄ້າທົ່ວໄປ';
+        const custPhone = document.getElementById('cust-phone-input').value || '';
+        const custAddress = document.getElementById('cust-address-input').value || '';
+        const status = document.getElementById('pay-status').value;
+        const discount = parseFloat(document.getElementById('discount-input').value) || 0;
+
+        const items = [];
+        let subtotal = 0;
+
+        document.querySelectorAll('#cart-table tr').forEach(row => {
+            const barcode = row.querySelector('.item-barcode').value;
+            const name = row.querySelector('.item-name').value;
+            const img = row.querySelector('.img-thumb-table')?.src || '';
+
+            if(name) {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                const cost = parseFloat(row.querySelector('.item-cost').value) || 0;
+                const total = qty * price;
+                subtotal += total;
+                items.push({ barcode, name, qty, price, cost, total, img });
+            }
+        });
+
+        if(items.length === 0) return alert('ກະລຸນາເພີ່ມລາຍການສິນຄ້າ');
+
+        let grandTotal = subtotal - discount;
+        if (grandTotal < 0) grandTotal = 0;
+
+        historyData.unshift({ docNo, docType, docDate, custName, custPhone, custAddress, subtotal, discount, grandTotal, status, items });
+        localStorage.setItem('my_history', JSON.stringify(historyData));
+
+        window.print();
+
+        // เพิ่มการเพิ่มลำดับเอกสารให้อัตโนมัติหลังจากสั่งพิมพ์/บันทึก
+        incrementDocNo();
+    }
+
+    // ================= 2. History System =================
+    function renderHistory() {
+        const tbody = document.getElementById('history-table');
+        tbody.innerHTML = '';
+
+        const search = document.getElementById('search-history').value.toLowerCase();
+        const filterStatus = document.getElementById('filter-history-status').value;
+
+        historyData.forEach((h, index) => {
+            if (filterStatus && h.status !== filterStatus) return;
+            if (search && !h.docNo.toLowerCase().includes(search) && !h.custName.toLowerCase().includes(search) && !h.docDate.includes(search)) return;
+
+            const statusClass = h.status === 'ຈ່າຍແລ້ວ' ? 'bg-success' : (h.status === 'ຍັງບໍ່ທັນຊຳລະ' ? 'bg-danger' : 'bg-warning text-dark');
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${h.docDate}</td>
+                    <td class="fw-bold text-primary">${h.docNo}</td>
+                    <td>${h.docType}</td>
+                    <td>${h.custName}</td>
+                    <td class="fw-bold">${h.grandTotal.toLocaleString()}</td>
+                    <td>
+                        <select class="form-select form-select-sm fw-bold ${statusClass} text-white border-0" onchange="updateHistoryStatus(${index}, this.value)">
+                            <option value="ຈ່າຍແລ້ວ" ${h.status === 'ຈ່າຍແລ້ວ' ? 'selected' : ''}>✅ ຈ່າຍແລ້ວ</option>
+                            <option value="ຍັງບໍ່ທັນຊຳລະ" ${h.status === 'ຍັງບໍ່ທັນຊຳລະ' ? 'selected' : ''}>❌ ຍັງບໍ່ທັນຊຳລະ</option>
+                            <option value="ເຄດິດ 7 ວັນ" ${h.status === 'ເຄດິດ 7 ວັນ' ? 'selected' : ''}>⏳ ເຄດິດ 7 ວັນ</option>
+                            <option value="ເຄດິດ 1 ເດືອນ" ${h.status === 'ເຄດິດ 1 ເດືອນ' ? 'selected' : ''}>⏳ ເຄດິດ 1 ເດືອນ</option>
+                        </select>
+                    </td>
+                    <td class="text-center text-nowrap">
+                        <div class="d-inline-flex gap-1 align-items-center">
+                            <button class="btn btn-sm btn-info text-white fw-bold px-2 py-1" onclick="viewHistoryDetail(${index})" title="ເບິ່ງລາຍລະອຽດ">👁️</button>
+                            <button class="btn btn-sm btn-success fw-bold px-2 py-1" onclick="exportSingleHistoryExcel(${index})" title="ດາວໂຫຼດ Excel">📊</button>
+                            <button class="btn btn-sm btn-danger fw-bold px-2 py-1" onclick="deleteHistory(${index})" title="ລົບ">🗑️</button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function updateHistoryStatus(index, newStatus) {
+        historyData[index].status = newStatus;
+        localStorage.setItem('my_history', JSON.stringify(historyData));
+        renderHistory();
+    }
+
+    function viewHistoryDetail(index) {
+        selectedHistoryIndex = index;
+        const h = historyData[index];
+        document.getElementById('modal-doc-title').innerText = `${h.docType} - ${h.docNo}`;
+
+        let itemsHtml = h.items.map((item, i) => `
+            <tr>
+                <td class="text-center">${i + 1}</td>
+                <td>${item.name}</td>
+                <td class="text-center">${item.qty}</td>
+                <td class="text-end">${item.price.toLocaleString()}</td>
+                <td class="text-end fw-bold">${item.total.toLocaleString()}</td>
+            </tr>
+        `).join('');
+
+        document.getElementById('modal-doc-body').innerHTML = `
+            <div class="row mb-2">
+                <div class="col-6">
+                    <p class="m-0"><strong>ລູກຄ້າ:</strong> ${h.custName}</p>
+                    <p class="m-0"><strong>ເບີໂທ:</strong> ${h.custPhone || '-'}</p>
+                </div>
+                <div class="col-6 text-end">
+                    <p class="m-0"><strong>ວັນທີ:</strong> ${h.docDate}</p>
+                    <p class="m-0"><strong>ສະຖານະ:</strong> <span class="badge bg-primary">${h.status}</span></p>
+                </div>
+            </div>
+            <table class="table table-sm table-bordered">
+                <thead class="table-light">
+                    <tr><th class="text-center">ລຳດັບ</th><th>ລາຍການ</th><th class="text-center">ຈຳນວນ</th><th class="text-end">ລາຄາ</th><th class="text-end">ລວມ</th></tr>
+                </thead>
+                <tbody>${itemsHtml}</tbody>
+            </table>
+            <div class="text-end bg-light p-2 rounded">
+                <p class="m-0">ຍອດລວມ: <strong>${h.subtotal.toLocaleString()}</strong> ກີບ</p>
+                <p class="m-0 text-danger">ສ່ວນຫຼຸດ: <strong>${(h.discount || 0).toLocaleString()}</strong> ກີບ</p>
+                <h5 class="m-0 text-primary mt-1">ຍອດສຸດທິ: <strong>${h.grandTotal.toLocaleString()}</strong> ກີບ</h5>
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('historyDetailModal'));
+        modal.show();
+    }
+
+    function loadInvoiceToPrint() {
+        if (selectedHistoryIndex === null) return;
+        const h = historyData[selectedHistoryIndex];
+
+        document.getElementById('doc-type').value = h.docType;
+        document.getElementById('doc-title').innerText = h.docType;
+        document.getElementById('doc-no').value = h.docNo;
+        document.getElementById('doc-date').value = h.docDate;
+        document.getElementById('cust-name-input').value = h.custName;
+        document.getElementById('cust-phone-input').value = h.custPhone || '';
+        document.getElementById('cust-address-input').value = h.custAddress || '';
+        document.getElementById('pay-status').value = h.status;
+        document.getElementById('discount-input').value = h.discount || 0;
+
+        const tbody = document.getElementById('cart-table');
+        tbody.innerHTML = '';
+        
+        h.items.forEach(item => {
+            const matchedStock = stockData.find(s => s.barcode === item.barcode || s.name === item.name);
+            const itemImg = item.img || (matchedStock ? matchedStock.img : '');
+
+            addCartRow(item.barcode || '', item.name, item.price, itemImg, item.cost || 0);
+            
+            const lastRow = tbody.lastElementChild;
+            lastRow.querySelector('.item-qty').value = item.qty;
+        });
+
+        calculateTotal();
+
+        bootstrap.Modal.getInstance(document.getElementById('historyDetailModal')).hide();
+        showPage('invoice');
+    }
+
+    function deleteHistory(index) {
+        if (confirm('ລົບປະຫວັດເອກະສານນີ້?')) {
+            historyData.splice(index, 1);
+            localStorage.setItem('my_history', JSON.stringify(historyData));
+            renderHistory();
+        }
+    }
+
+    function exportSingleHistoryExcel(index) {
+        const h = historyData[index];
+        if (!h) return;
+
+        const itemsData = (h.items || []).map((item, i) => ({
+            'ລຳດັບ': i + 1,
+            'ບາໂຄ້ດ': item.barcode || '',
+            'ຊື່ສິນຄ້າ': item.name || '',
+            'ຈຳນວນ': item.qty || 0,
+            'ລາຄາ/ໜ່ວຍ': item.price || 0,
+            'ລາຄາລວມ': item.total || 0
+        }));
+
+        itemsData.push({});
+        itemsData.push({ 'ຊື່ສິນຄ້າ': 'ຍອດລວມຍ່ອຍ (Subtotal)', 'ລາຄາລວມ': h.subtotal || 0 });
+        itemsData.push({ 'ຊື່ສິນຄ້າ': 'ສ່ວນຫຼຸດ (Discount)', 'ລາຄາລວມ': h.discount || 0 });
+        itemsData.push({ 'ຊື່ສິນຄ້າ': 'ຍອດຊຳລະສຸດທິ (Grand Total)', 'ລາຄາລວມ': h.grandTotal || 0 });
+
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(itemsData);
+
+        XLSX.utils.sheet_add_aoa(ws, [
+            [`ເລກທີເອກະສານ: ${h.docNo}`, `ປະເພດ: ${h.docType}`],
+            [`ວັນທີ: ${h.docDate}`, `ສະຖານະ: ${h.status}`],
+            [`ລູກຄ້າ: ${h.custName}`, `ເບີໂທ: ${h.custPhone || '-'}`],
+            [`ທີ່ຢູ່: ${h.custAddress || '-'}`],
+            []
+        ], { origin: "A1" });
+
+        const wsWithItems = XLSX.utils.json_to_sheet(itemsData, { origin: "A6" });
+        XLSX.utils.book_append_sheet(wb, wsWithItems, "Bill_Detail");
+        XLSX.writeFile(wb, `${h.docNo}_Detail.xlsx`);
+    }
+
+    // ================= 3. Customer & Stock Utilities =================
+    function filterCustomerDropdown() {
+        const query = document.getElementById('cust-search-input').value.toLowerCase();
+        const custSelect = document.getElementById('cust-select');
+        custSelect.innerHTML = '<option value="">-- ເລືອກລູກຄ້າ --</option>';
+
+        customerData.forEach((cust, index) => {
+            const searchStr = `${cust.name} ${cust.phone || ''} ${cust.group}`.toLowerCase();
+            if (searchStr.includes(query)) {
+                custSelect.innerHTML += `<option value="${index}">[${cust.group}] ${cust.name}</option>`;
+            }
+        });
+    }
+
+    function filterStockDropdown() {
+        const query = document.getElementById('product-search-input').value.toLowerCase();
+        const stockSelect = document.getElementById('stock-select');
+        stockSelect.innerHTML = '<option value="">-- ເລືອກສິນຄ້າຈາກຄັງ --</option>';
+
+        stockData.forEach((item, index) => {
+            const searchStr = `${item.name} ${item.barcode || ''}`.toLowerCase();
+            if (searchStr.includes(query)) {
+                stockSelect.innerHTML += `<option value="${index}">${item.name} (${item.price.toLocaleString()} ກີບ)</option>`;
+            }
+        });
+    }
+
+    function renderCustomers() {
+        try { localStorage.setItem('my_customers', JSON.stringify(customerData)); } catch(e) {}
+        const custTable = document.getElementById('cust-table');
+        custTable.innerHTML = '';
+        filterCustomerDropdown();
+
+        customerData.forEach((cust, index) => {
+            custTable.innerHTML += `
+                <tr>
+                    <td><span class="badge bg-secondary badge-group">${cust.group}</span></td>
+                    <td class="fw-bold">${cust.name}</td>
+                    <td>${cust.phone || '-'}</td>
+                    <td>${cust.address || '-'}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-warning fw-bold me-1" onclick="editCustomer(${index})">ແກ້ໄຂ</button>
+                        <button class="btn btn-sm btn-danger fw-bold" onclick="deleteCustomer(${index})">ລົບ</button>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    function saveCustomer() {
+        const group = document.getElementById('cust-group').value;
+        const name = document.getElementById('cust-name').value.trim();
+        const phone = document.getElementById('cust-phone').value.trim();
+        const address = document.getElementById('cust-address').value.trim();
+        const editIndex = document.getElementById('cust-index').value;
+
+        if (!name) return alert('ກະລຸນາກອກຊື່ລູກຄ້າ');
+
+        if (editIndex === '') {
+            customerData.push({ group, name, phone, address });
+        } else {
+            customerData[editIndex] = { group, name, phone, address };
+            document.getElementById('cust-index').value = '';
+            document.getElementById('form-cust-title').innerText = '➕ ເພີ່ມ / ແກ້ໄຂ ລູກຄ້າ';
+        }
+
+        document.getElementById('cust-name').value = '';
+        document.getElementById('cust-phone').value = '';
+        document.getElementById('cust-address').value = '';
+        renderCustomers();
+    }
+
+    function editCustomer(index) {
+        const cust = customerData[index];
+        document.getElementById('cust-group').value = cust.group;
+        document.getElementById('cust-name').value = cust.name;
+        document.getElementById('cust-phone').value = cust.phone || '';
+        document.getElementById('cust-address').value = cust.address || '';
+        document.getElementById('cust-index').value = index;
+        document.getElementById('form-cust-title').innerText = '✏️ ແກ້ໄຂຂໍ້ມູນລູກຄ້າ';
+    }
+
+    function deleteCustomer(index) {
+        if (confirm('ລົບລູກຄ້ານີ້?')) {
+            customerData.splice(index, 1);
+            renderCustomers();
+        }
+    }
+
+    function autoFillCustomer(select) {
+        const index = select.value;
+        if (index !== '') {
+            const cust = customerData[index];
+            document.getElementById('cust-name-input').value = cust.name;
+            document.getElementById('cust-phone-input').value = cust.phone || '';
+            document.getElementById('cust-address-input').value = cust.address || '';
+        }
+    }
+
+    function calcProfitMargin() {
+        const cost = parseFloat(document.getElementById('stock-cost').value) || 0;
+        const price = parseFloat(document.getElementById('stock-price').value) || 0;
+        const badge = document.getElementById('margin-label');
+
+        if(price > 0) {
+            const margin = (((price - cost) / price) * 100).toFixed(1);
+            badge.innerText = `${margin}%`;
+            badge.className = margin >= 0 ? "badge bg-success w-100 p-2" : "badge bg-danger w-100 p-2";
+        } else {
+            badge.innerText = "0%";
+            badge.className = "badge bg-info text-dark w-100 p-2";
+        }
+    }
+
+    function renderStock() {
+        try { 
+            localStorage.setItem('my_stock', JSON.stringify(stockData)); 
+        } catch (e) {
+            console.warn('localStorage เต็ม:', e);
+        }
+
+        const stockTable = document.getElementById('stock-table');
+        filterStockDropdown();
+
+        const filterCat = document.getElementById('filter-category').value;
+        
+        const filteredStock = stockData.filter(item => {
+            const category = item.category || categoryData[0];
+            return !filterCat || filterCat === 'ທັງໝົດ' || category === filterCat;
+        });
+
+        const totalPages = Math.ceil(filteredStock.length / itemsPerPage) || 1;
+        if (currentStockPage > totalPages) currentStockPage = totalPages;
+        if (currentStockPage < 1) currentStockPage = 1;
+
+        const startIndex = (currentStockPage - 1) * itemsPerPage;
+        const paginatedItems = filteredStock.slice(startIndex, startIndex + itemsPerPage);
+
+        let htmlBuffer = '';
+
+        paginatedItems.forEach((item) => {
+            const realIndex = stockData.indexOf(item);
+            const category = item.category || categoryData[0];
+            const cost = item.cost || 0;
+            const price = item.price || 0;
+            const margin = price > 0 ? (((price - cost) / price) * 100).toFixed(1) : 0;
+            const imgSrc = item.img || noImgPlaceholder;
+
+            htmlBuffer += `
+                <tr>
+                    <td class="text-center"><img src="${imgSrc}" class="img-thumb-table" loading="lazy"></td>
+                    <td><span class="badge bg-secondary badge-group">${category}</span></td>
+                    <td>${item.barcode || '-'}</td>
+                    <td class="fw-bold">${item.name}</td>
+                    <td>${cost.toLocaleString()}</td>
+                    <td>${price.toLocaleString()}</td>
+                    <td><span class="badge ${margin >= 0 ? 'bg-success' : 'bg-danger'}">${margin}%</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-warning fw-bold me-1" onclick="editStock(${realIndex})">ແກ້ໄຂ</button>
+                        <button class="btn btn-sm btn-danger fw-bold" onclick="deleteStock(${realIndex})">ລົບ</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        stockTable.innerHTML = htmlBuffer;
+        renderPaginationControls(totalPages);
+    }
+
+    function renderPaginationControls(totalPages) {
+        let paginationContainer = document.getElementById('stock-pagination');
+        if (!paginationContainer) {
+            paginationContainer = document.createElement('div');
+            paginationContainer.id = 'stock-pagination';
+            paginationContainer.className = 'd-flex justify-content-between align-items-center mt-3';
+            document.getElementById('stock-table').parentElement.after(paginationContainer);
+        }
+
+        paginationContainer.innerHTML = `
+            <small class="text-muted">ໜ້າ ${currentStockPage} ຈາກ ${totalPages}</small>
+            <div>
+                <button class="btn btn-sm btn-outline-primary me-1" ${currentStockPage === 1 ? 'disabled' : ''} onclick="changeStockPage(-1)">⏮️ ກ່ອນໜ້າ</button>
+                <button class="btn btn-sm btn-outline-primary" ${currentStockPage >= totalPages ? 'disabled' : ''} onclick="changeStockPage(1)">ຕໍ່ໄປ ⏭️</button>
+            </div>
+        `;
+    }
+
+    function changeStockPage(direction) {
+        currentStockPage += direction;
+        renderStock();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function saveStock() {
+        const barcode = document.getElementById('stock-barcode').value.trim();
+        const category = document.getElementById('stock-category').value;
+        const name = document.getElementById('stock-name').value.trim();
+        const cost = parseFloat(document.getElementById('stock-cost').value) || 0;
+        const price = parseFloat(document.getElementById('stock-price').value) || 0;
+        const img = document.getElementById('stock-img-base64').value;
+        const editIndex = document.getElementById('stock-index').value;
+
+        if (!name) return alert('ກະລຸນາກອກຊື່ສິນຄ້າ');
+
+        if (editIndex === '') {
+            stockData.push({ barcode, category, name, cost, price, img });
+        } else {
+            stockData[editIndex] = { barcode, category, name, cost, price, img };
+            document.getElementById('stock-index').value = '';
+            document.getElementById('form-stock-title').innerText = '➕ ເພີ່ມ / ແກ້ໄຂ ສິນຄ້າ';
+        }
+
+        document.getElementById('stock-barcode').value = '';
+        document.getElementById('stock-name').value = '';
+        document.getElementById('stock-cost').value = '';
+        document.getElementById('stock-price').value = '';
+        clearImage();
+        renderStock();
+    }
+
+    function editStock(index) {
+        const item = stockData[index];
+        document.getElementById('stock-barcode').value = item.barcode || '';
+        document.getElementById('stock-category').value = item.category || categoryData[0];
+        document.getElementById('stock-name').value = item.name;
+        document.getElementById('stock-cost').value = item.cost || 0;
+        document.getElementById('stock-price').value = item.price || 0;
+        document.getElementById('stock-img-base64').value = item.img || '';
+        document.getElementById('stock-index').value = index;
+        document.getElementById('form-stock-title').innerText = '✏️ ແກ້ໄຂຂໍ້ມູນສິນຄ້າ';
+        calcProfitMargin();
+    }
+
+    function deleteStock(index) {
+        if (confirm('ລົບສິນຄ້ານີ້?')) {
+            stockData.splice(index, 1);
+            renderStock();
+        }
+    }
+
+    function loadReportCategories() {
+        const catSelect = document.getElementById('report-category');
+        if (!catSelect) return;
+        catSelect.innerHTML = '<option value="ທັງໝົດ">-- ທຸກໝວດໝູ່ (All Categories) --</option>';
+        categoryData.forEach(cat => {
+            catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+
+    function generateReports() {
+        loadReportCategories();
+
+        const startDate = document.getElementById('report-start-date').value;
+        const endDate = document.getElementById('report-end-date').value;
+        const selectedCat = document.getElementById('report-category').value;
+
+        let totalSales = 0;
+        let totalOrders = 0;
+        const productSales = {};
+        const productProfits = {};
+
+        const productCategoryMap = {};
+        stockData.forEach(stock => {
+            productCategoryMap[stock.name] = stock.category || '📦 ທົ່ວໄປ';
+        });
+
+        historyData.forEach(h => {
+            if (startDate && h.docDate < startDate) return;
+            if (endDate && h.docDate > endDate) return;
+
+            let hasMatchingCategoryItem = false;
+            let invoiceCategorySales = 0;
+
+            if (h.items) {
+                h.items.forEach(item => {
+                    const itemCat = productCategoryMap[item.name] || '📦 ທົ່ວໄປ';
+
+                    if (selectedCat !== 'ທັງໝົດ' && itemCat !== selectedCat) return;
+
+                    hasMatchingCategoryItem = true;
+                    const qty = item.qty || 0;
+                    const price = item.price || 0;
+                    const cost = item.cost || 0;
+                    const profit = (price - cost) * qty;
+
+                    productSales[item.name] = (productSales[item.name] || 0) + qty;
+                    productProfits[item.name] = (productProfits[item.name] || 0) + profit;
+                    invoiceCategorySales += (qty * price);
+                });
+            }
+
+            if (hasMatchingCategoryItem) {
+                totalOrders++;
+                totalSales += invoiceCategorySales;
+            }
+        });
+
+        document.getElementById('report-total-sales').innerText = totalSales.toLocaleString() + ' ກີບ';
+        document.getElementById('report-total-orders').innerText = totalOrders.toLocaleString() + ' ບິນ';
+
+        const sortedSelling = Object.entries(productSales).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        document.getElementById('report-top-selling').innerHTML = sortedSelling.length ? 
+            sortedSelling.map((p, i) => `<tr><td class="text-center">${i + 1}</td><td>${p[0]}</td><td class="text-end fw-bold">${p[1]}</td></tr>`).join('') :
+            '<tr><td colspan="3" class="text-center text-muted">ບໍ່ມີຂໍ້ມູນ</td></tr>';
+
+        const sortedProfits = Object.entries(productProfits).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        document.getElementById('report-top-profitable').innerHTML = sortedProfits.length ? 
+            sortedProfits.map((p, i) => `<tr><td class="text-center">${i + 1}</td><td>${p[0]}</td><td class="text-end fw-bold text-success">${p[1].toLocaleString()}</td></tr>`).join('') :
+            '<tr><td colspan="3" class="text-center text-muted">ບໍ່ມີຂໍ້ມູນ</td></tr>';
+    }
+
+    function resetReportFilter() {
+        document.getElementById('report-start-date').value = '';
+        document.getElementById('report-end-date').value = '';
+        document.getElementById('report-category').value = 'ທັງໝົດ';
+        generateReports();
+    }
+
+    function exportReportExcel() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const productSales = {};
+        const productProfits = {};
+
+        historyData.forEach(h => {
+            if (h.items) {
+                h.items.forEach(item => {
+                    productSales[item.name] = (productSales[item.name] || 0) + item.qty;
+                    const profit = (item.price - (item.cost || 0)) * item.qty;
+                    productProfits[item.name] = (productProfits[item.name] || 0) + profit;
+                });
+            }
+        });
+
+        const topSellingData = Object.entries(productSales).sort((a,b) => b[1] - a[1]).map((p, i) => ({ ລຳດັບ: i+1, ຊື່ສິນຄ້າ: p[0], ຈຳນວນ: p[1] }));
+        const topProfitableData = Object.entries(productProfits).sort((a,b) => b[1] - a[1]).map((p, i) => ({ ລຳດັບ: i+1, ຊື່ສິນຄ້າ: p[0], ກຳໄລ_ກີບ: p[1] }));
+
+        const wb = XLSX.utils.book_new();
+        const ws1 = XLSX.utils.json_to_sheet(topSellingData);
+        const ws2 = XLSX.utils.json_to_sheet(topProfitableData);
+
+        XLSX.utils.book_append_sheet(wb, ws1, "ສິນຄ້າຂາຍດີ");
+        XLSX.utils.book_append_sheet(wb, ws2, "ສິນຄ້າກຳໄລສູງ");
+        XLSX.writeFile(wb, `Sales_Report_${todayStr}.xlsx`);
+    }
+
+    function exportExcel(type) {
+        let data = [];
+        let filename = `${type}_data.xlsx`;
+
+        if (type === 'stock') data = stockData;
+        else if (type === 'customer') data = customerData;
+        else if (type === 'history') data = historyData.map(h => ({ ເລກທີ: h.docNo, ປະເພດ: h.docType, ວັນທີ: h.docDate, ລູກຄ້າ: h.custName, ຍອດລວມ: h.grandTotal, ສະຖານະ: h.status }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.writeFile(wb, filename);
+    }
+
+    function importExcel(event, type) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+
+                if (type === 'stock') {
+                    const formattedData = jsonData.map(item => ({
+                        barcode: item.barcode || item['ບາໂຄ້ດ'] || '',
+                        category: item.category || item['ໝວດໝູ່'] || categoryData[0],
+                        name: item.name || item['ຊື່ສິນຄ້າ'] || 'ບໍ່ມີຊື່',
+                        cost: parseFloat(item.cost || item['ຕົ້ນທຶນ']) || 0,
+                        price: parseFloat(item.price || item['ລາຄາຂາຍ']) || 0,
+                        img: ''
+                    }));
+
+                    stockData = stockData.concat(formattedData);
+                    localStorage.setItem('my_stock', JSON.stringify(stockData));
+                    renderStock();
+                } else if (type === 'customer') {
+                    const formattedCust = jsonData.map(item => ({
+                        group: item.group || item['ກຸ່ມ'] || 'ສ່ວນບຸກຄົນ',
+                        name: item.name || item['ຊື່ລູກຄ້າ'] || '',
+                        phone: item.phone || item['ເບີໂທ'] || '',
+                        address: item.address || item['ທີ່ຢູ່'] || ''
+                    }));
+                    
+                    customerData = customerData.concat(formattedCust);
+                    localStorage.setItem('my_customers', JSON.stringify(customerData));
+                    renderCustomers();
+                }
+
+                alert(`Import ຂໍ້ມູນສຳເລັດ! ທັງໝົດ ${jsonData.length} ລາຍການ`);
+            } catch (err) {
+                console.error(err);
+                alert('ເກີດຂໍ້ຜິດພາດໃນການ Import ไฟล์ Excel');
+            } finally {
+                event.target.value = '';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function renderCategories() {
+        try { localStorage.setItem('my_categories', JSON.stringify(categoryData)); } catch(e) {}
+        const catTable = document.getElementById('cat-table');
+        catTable.innerHTML = '';
+        categoryData.forEach((cat, index) => {
+            catTable.innerHTML += `<tr><td class="text-center fw-bold">${index + 1}</td><td class="fw-bold">${cat}</td><td class="text-center"><button class="btn btn-sm btn-danger fw-bold" onclick="deleteCategory(${index})">ລົບ</button></td></tr>`;
+        });
+
+        const stockCatSelect = document.getElementById('stock-category');
+        const filterCatSelect = document.getElementById('filter-category');
+        stockCatSelect.innerHTML = '';
+        filterCatSelect.innerHTML = '<option value="ທັງໝົດ">All / ທັງໝົດ</option>';
+        categoryData.forEach(cat => {
+            stockCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+            filterCatSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+
+    function saveCategory() {
+        const catName = document.getElementById('cat-name').value.trim();
+        if (!catName) return alert('ກະລຸນາກອກຊື່ໝວດໝູ່');
+        categoryData.push(catName);
+        document.getElementById('cat-name').value = '';
+        renderCategories();
+        renderStock();
+    }
+
+    function deleteCategory(index) {
+        if (confirm('ລົບໝວດໝູ່ນີ້?')) {
+            categoryData.splice(index, 1);
+            renderCategories();
+            renderStock();
+        }
+    }
+
+    function addFromStock(select) {
+        const index = select.value;
+        if (index !== '') {
+            const item = stockData[index];
+            addCartRow(item.barcode, item.name, item.price, item.img, item.cost);
+            select.value = '';
+        }
+    }
+
+    async function toggleCamera() {
+        const container = document.getElementById('video-container');
+        if (html5QrCodeStock) {
+            stopCamera();
+            return;
+        }
+        container.style.display = 'block';
+        html5QrCodeStock = new Html5Qrcode("stock-reader");
+
+        try {
+            await html5QrCodeStock.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    playBeepSound();
+                    document.getElementById('stock-barcode').value = decodedText;
+                    stopCamera();
+                },
+                (errorMessage) => {}
+            );
+        } catch (err) {
+            alert('ບໍ່ສາມາດເປີດກ້ອງໄດ້: ' + err);
+            container.style.display = 'none';
+            html5QrCodeStock = null;
+        }
+    }
+
+    function stopCamera() {
+        if (html5QrCodeStock) {
+            html5QrCodeStock.stop().then(() => {
+                html5QrCodeStock = null;
+                document.getElementById('video-container').style.display = 'none';
+            }).catch(() => {
+                html5QrCodeStock = null;
+                document.getElementById('video-container').style.display = 'none';
+            });
+        } else {
+            document.getElementById('video-container').style.display = 'none';
+        }
+    }
+
+    function processAndResizeImage(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 300; canvas.height = 300;
+                ctx.drawImage(img, 0, 0, 300, 300);
+                const resizedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                document.getElementById('stock-img-base64').value = resizedBase64;
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function clearImage() {
+        document.getElementById('stock-img-file').value = '';
+        document.getElementById('stock-img-base64').value = '';
+    }
+
+    let currentExportAction = 'whatsapp';
+
+    function shareWhatsApp() {
+        currentExportAction = 'whatsapp';
+        const modal = new bootstrap.Modal(document.getElementById('orientationModal'));
+        modal.show();
+    }
+
+    function downloadImage() {
+        currentExportAction = 'download';
+        const modal = new bootstrap.Modal(document.getElementById('orientationModal'));
+        modal.show();
+    }
+
+    async function processExport(orientation) {
+        const modalElement = document.getElementById('orientationModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) modalInstance.hide();
+
+        const captureElement = document.getElementById('capture-area');
+        const docNo = document.getElementById('doc-no')?.value || 'INV-001';
+        const grandTotalElement = document.getElementById('grand-total');
+        const grandTotal = grandTotalElement ? grandTotalElement.innerText : '0';
+        const shareText = `📄 ເອກະສານ: ${docNo}\n💰 ຍອດລວມ: ${grandTotal} ກີບ`;
+
+        const elementsToHide = captureElement.querySelectorAll('.no-print, input[type="file"], .btn-close, #cust-search-input, #cust-select, button[title="ສ້າງເລກທີໃໝ່"]');
+        elementsToHide.forEach(el => el.style.setProperty('display', 'none', 'important'));
+
+        const inputs = captureElement.querySelectorAll('input, textarea, select');
+        const originalStyles = [];
+        inputs.forEach(el => {
+            originalStyles.push({
+                el: el,
+                border: el.style.border,
+                background: el.style.background,
+                boxShadow: el.style.boxShadow
+            });
+            el.style.border = 'none';
+            el.style.background = 'transparent';
+            el.style.boxShadow = 'none';
+        });
+
+        const originalWidth = captureElement.style.width;
+        const originalMaxWidth = captureElement.style.maxWidth;
+
+        if (orientation === 'landscape') {
+            captureElement.style.width = '1100px';
+            captureElement.style.maxWidth = '1100px';
+        } else {
+            captureElement.style.width = '700px';
+            captureElement.style.maxWidth = '700px';
+        }
+
+        try {
+            const canvas = await html2canvas(captureElement, {
+                scale: 4,
+                useCORS: true,
+                logging: false
+            });
+
+            captureElement.style.width = originalWidth;
+            captureElement.style.maxWidth = originalMaxWidth;
+            elementsToHide.forEach(el => el.style.display = '');
+            originalStyles.forEach(item => {
+                item.el.style.border = item.border;
+                item.el.style.background = item.background;
+                item.el.style.boxShadow = item.boxShadow;
+            });
+
+            if (currentExportAction === 'download') {
+                const link = document.createElement('a');
+                link.download = `${docNo}_${orientation}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                return;
+            }
+
+            canvas.toBlob(async (blob) => {
+                if (!blob) {
+                    alert('ບໍ່ສາມາດສ້າງຮູບພາບໄດ້');
+                    return;
+                }
+
+                const file = new File([blob], `${docNo}.png`, { type: 'image/png' });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({
+                            title: `ເອກະສານ ${docNo}`,
+                            text: shareText,
+                            files: [file]
+                        });
+                    } catch (shareErr) {
+                        if (shareErr.name !== 'AbortError') console.error(shareErr);
+                    }
+                } else {
+                    const link = document.createElement('a');
+                    link.download = `${docNo}_${orientation}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n\n(ກະລຸນາແນບຮູບທີ່ດາວໂຫຼດໄວ້ເພື່ອສົ່ງ)')}`;
+                    window.open(waUrl, '_blank');
+                }
+            }, 'image/png');
+
+        } catch (error) {
+            captureElement.style.width = originalWidth;
+            captureElement.style.maxWidth = originalMaxWidth;
+            elementsToHide.forEach(el => el.style.display = '');
+            originalStyles.forEach(item => {
+                item.el.style.border = item.border;
+                item.el.style.background = item.background;
+                item.el.style.boxShadow = item.boxShadow;
+            });
+            console.error('Error generating image:', error);
+            alert('ເກີດຂໍ້ຜິດພາດໃນການສ້າງຮູບພາບ');
+        }
+    }
+
+    // ฟังก์ชันสร้าง / ดึงเลขที่เอกสารปัจจุบัน
+    function getOrGenerateDocNo() {
+        const today = new Date();
+        const datePrefix = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+        
+        let lastDate = localStorage.getItem('last_doc_date');
+        let lastSeq = parseInt(localStorage.getItem('last_doc_seq') || '0');
+
+        if (lastDate !== datePrefix) {
+            lastSeq = 1;
+        } else if (lastSeq === 0) {
+            lastSeq = 1;
+        }
+
+        const docNo = `INV-${datePrefix}-${String(lastSeq).padStart(3, '0')}`;
+        document.getElementById('doc-no').value = docNo;
+        return docNo;
+    }
+
+    // ฟังก์ชันเพิ่มลำดับเลขที่เอกสาร (+1) และบันทึกลง localStorage
+    function incrementDocNo() {
+        const today = new Date();
+        const datePrefix = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+        
+        let lastDate = localStorage.getItem('last_doc_date');
+        let lastSeq = parseInt(localStorage.getItem('last_doc_seq') || '0');
+
+        if (lastDate !== datePrefix) {
+            lastSeq = 1;
+        } else {
+            lastSeq += 1;
+        }
+
+        localStorage.setItem('last_doc_date', datePrefix);
+        localStorage.setItem('last_doc_seq', lastSeq.toString());
+        
+        getOrGenerateDocNo();
+    }
+
+    function generateNextDocNo() {
+        incrementDocNo();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        getOrGenerateDocNo();
+        if(document.getElementById('doc-date')) {
+            document.getElementById('doc-date').valueAsDate = new Date();
+        }
+    });
+
+    // Init App
+    renderCategories();
+    addCartRow();
+    renderStock();
+    renderCustomers();
+    renderHistory();
+</script>
+
+<div class="modal fade" id="orientationModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title fw-bold">📐 ເລືອກທິດທາງຮູບພາບ</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="small text-muted mb-3">ກະລຸນາເລືອກຮູບແບບທີ່ຕ້ອງການສົ່ງ/ບັນທຶກ</p>
+        <div class="d-grid gap-2">
+          <button class="btn btn-outline-primary fw-bold" onclick="processExport('portrait')">
+            📱 ລວງຕັ້ງ (Portrait)
+          </button>
+          <button class="btn btn-outline-primary fw-bold" onclick="processExport('landscape')">
+            🖥️ ລວງນອນ (Landscape)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
